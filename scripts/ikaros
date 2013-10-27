@@ -1,0 +1,46 @@
+#!/bin/perl
+use strict;
+use warnings;
+use Data::Dumper;
+use App::Ikaros;
+use App::Ikaros::Planner::Helper qw/exclude_blacklist/;
+
+my $all_tests = [ 't/build.t' ];
+my $blacklist = [ 't/App-Ikaros.t' ];
+my $prove_tests = $blacklist;
+my $forkprove_tests = exclude_blacklist($all_tests, $blacklist);
+
+my $ikaros = App::Ikaros->new(@ARGV);
+$ikaros->plan({
+    prove_tests     => $prove_tests,
+    forkprove_tests => $forkprove_tests,
+
+    chdir => 'work',
+    prove_command_args  => [
+        '-Ilib',
+        '-Ilocal/lib/perl5',
+        '-Ilocal/lib/perl5/x86_64-linux-thread-multi'
+    ],
+    forkprove_command_args => [
+        '-Ilib',
+        '-Ilocal/lib/perl5',
+        '-Ilocal/lib/perl5/x86_64-linux-thread-multi'
+    ],
+    before_commands => [
+        'if [ -d work ]; then rm -rf work; fi;',
+        'if [ -d cover_db ]; then rm -rf cover_db; fi;',
+        'if [ -f junit_output.xml ]; then rm junit_output.xml; fi;',
+        'git clone https://github.com/goccy/p5-App-Ikaros.git work',
+    ],
+    after_commands => []
+});
+
+$ikaros->launch(sub {
+    my $failed_tests = shift;
+    my $failed_tests_num = scalar @$failed_tests;
+    print <<"MESSAGE";
+FAILED $failed_tests_num.
+start Retry testing...
+MESSAGE
+    print Dumper $failed_tests;
+});
