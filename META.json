@@ -27,7 +27,22 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "6.36"
+            "AnyEvent" : "0",
+            "App::ForkProve" : "0",
+            "App::Prove" : "0",
+            "Capture::Tiny" : "0",
+            "Class::Accessor::Fast" : "0",
+            "Coro" : "0",
+            "Devel::Cover" : "0",
+            "ExtUtils::MakeMaker" : "6.36",
+            "IPC::Run" : "0",
+            "List::MoreUtils" : "0",
+            "List::Util" : "0",
+            "Net::OpenSSH" : "0",
+            "POSIX" : "0",
+            "TAP::Harness::JUnit" : "0",
+            "XML::Simple" : "0",
+            "YAML::XS" : "0"
          }
       },
       "configure" : {
@@ -53,13 +68,14 @@
    },
    "release_status" : "unstable",
    "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/goccy/p5-App-Ikaros/issues"
+      },
+      "homepage" : "https://github.com/goccy/p5-App-Ikaros",
       "repository" : {
-         "type" : "git",
-         "url" : "git://bitbucket.org/goccy/p5-app-ikaros.git"
+         "url" : "https://github.com/goccy/p5-App-Ikaros.git",
+         "web" : "https://github.com/goccy/p5-App-Ikaros"
       }
    },
-   "version" : "0.01",
-   "x_contributors" : [
-      "masaaki.goshima <masaaki.goshima@mixi.co.jp>"
-   ]
+   "version" : "0.01"
 }
