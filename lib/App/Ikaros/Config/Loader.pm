@@ -10,10 +10,10 @@ sub new {
         die "cannot find ikaros's config file : $options->{config}";
     }
 
-    my $engine_name = $options->{engine};
+    my $engine_name = $options->{config_type};
     ($engine_name) = $options->{config} =~ /\.(yaml)$/ unless $engine_name;
 
-    unless ($engine_name =~ /(yaml)/) {
+    unless ($engine_name =~ /(yaml|dsl)/) {
         die "unknown engine [$engine_name]";
     }
     my $engine = 'App/Ikaros/Config/Loader/Engine/' . uc($engine_name);
@@ -21,7 +21,7 @@ sub new {
     $engine =~ s|/|::|g;
     return bless {
         config => $options->{config},
-        engine => $engine->new
+        engine => $engine->new($options->{config_options})
     }, $class;
 }
 

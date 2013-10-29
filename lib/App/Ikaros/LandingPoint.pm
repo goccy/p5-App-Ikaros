@@ -25,9 +25,16 @@ sub new {
     my ($class, $default, $host) = @_;
     my $options = { %$default };
 
-    my $hostname = (keys %$host)[0];
+    my ($hostname, $h);
+    if (ref $host eq '') {
+        $hostname = $host;
+        $h = {};
+    } else {
+        $hostname = (keys %$host)[0];
+        $h = $host->{$hostname};
+    }
     die "unknown hostname [$hostname]" unless $hostname;
-    my $h = $host->{$hostname};
+
     my $user     = $h->{user}        || $default->{user} || $ENV{USER};
     my $key      = $h->{private_key} || $default->{private_key} || '';
     my $workdir  = $h->{workdir}     || $default->{workdir} || '$HOME';

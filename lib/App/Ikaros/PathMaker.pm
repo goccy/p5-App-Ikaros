@@ -9,7 +9,6 @@ our @EXPORT_OK = qw/
     lib
     lib_top_dir
     parent_lib_dir
-    perl5_dir
     lib_dir
     bin_dir
 /;
@@ -28,28 +27,42 @@ sub lib($) {
 
 sub lib_top_dir($) {
     my $class = shift;
-    my $parent_lib_dir = parent_lib_dir($class);
-    return ($parent_lib_dir) ?
-        perl5_dir($class) . '/' . $parent_lib_dir : lib $class;
+    my $lib = lib($class);
+    my @dirs = grep { $_ ne '' } split '/', $lib;
+    my @parent_dirs;
+    @parent_dirs = grep { $_ ne '' } split '/', $class;
+    my $depth = scalar @parent_dirs;
+    my $size = scalar @dirs;
+    return '/' . join '/', @dirs[0 .. $size - ($depth-1)];
 }
 
 sub parent_lib_dir($) {
     my $class = shift;
-    my ($lib_dir) = lib($class) =~ m|perl5/(.*)|;
-    my ($parent_lib_dir) = $lib_dir =~ m|(.*)/|;
-    return $parent_lib_dir;
+    my @parent_dirs = grep { $_ ne '' } split '/', $class;
+    my $depth = scalar @parent_dirs;
+    return ($depth > 0) ? $parent_dirs[0] : '';
 }
 
 sub lib_dir($) {
     my $class = shift;
-    my ($lib_dir) = lib($class) =~ m|(.*)/perl5/|;
-    return $lib_dir;
+    my $lib = lib($class);
+    my @dirs = grep { $_ ne '' } split '/', $lib;
+    my @parent_dirs;
+    @parent_dirs = grep { $_ ne '' } split '/', $class;
+    my $depth = scalar @parent_dirs;
+    my $size = scalar @dirs;
+    return '/' . join('/', @dirs[0 .. $size - ($depth+1)]) . '/bin';
 }
 
 sub bin_dir($) {
     my $class = shift;
-    my ($root) = lib($class) =~ m|(.*)/lib/perl5/|;
-    return $root . '/bin';
+    my $lib = lib($class);
+    my @dirs = grep { $_ ne '' } split '/', $lib;
+    my @parent_dirs;
+    @parent_dirs = grep { $_ ne '' } split '/', $class;
+    my $depth = scalar @parent_dirs;
+    my $size = scalar @dirs;
+    return '/' . join('/', @dirs[0 .. $size - ($depth+2)]) . '/bin';
 }
 
 sub perl5_dir($) {

@@ -11,6 +11,7 @@ use App::Ikaros::Planner;
 use App::Ikaros::LandingPoint;
 use App::Ikaros::Builder;
 use App::Ikaros::Reporter;
+use App::Ikaros::PathMaker qw/bin_dir lib_dir/;
 
 our $VERSION = '0.01';
 
@@ -23,23 +24,12 @@ __PACKAGE__->mk_accessors(qw/
 /);
 
 sub new {
-    my ($class, @args) = @_;
-
-    my $self = {};
-    local @ARGV = @args;
-    my $parser = Getopt::Long::Parser->new(
-        config => ["no_ignore_case", "pass_through"],
-    );
-    $parser->getoptions(
-        'h|help'     => \$self->{help},
-        'c|config=s' => \$self->{config},
-        'config_load_engine=s' => \$self->{config_load_engine},
-    );
-    return usage() if ($self->{help});
+    my ($class, $options) = @_;
 
     my $loaded_conf = App::Ikaros::Config::Loader->new({
-        engine => $self->{config_load_engine},
-        config => $self->{config},
+        config => $options->{config},
+        config_type => $options->{config_type},
+        config_options => $options->{config_options}
     })->load;
 
     my $ikaros = $class->SUPER::new({
@@ -48,11 +38,8 @@ sub new {
     });
 
     $ikaros->__setup_landing_points;
+    $ikaros->__planning;
     return $ikaros;
-}
-
-sub usage {
-
 }
 
 sub __setup_landing_points {
@@ -63,24 +50,28 @@ sub __setup_landing_points {
     }
 }
 
-sub plan {
-    my ($self, $args) = @_;
-    my $planner = App::Ikaros::Planner->new($self->hosts, $args);
-    $planner->planning($_, $args) foreach @{$self->hosts};
-    $self->tests([ @{$args->{prove_tests}}, @{$args->{forkprove_tests}} ]);
-    $self->__setup_recovery_testing_command($args);
+sub __planning {
+    my ($self) = @_;
+    my $plan = $self->config->{plan};
+    my $planner = App::Ikaros::Planner->new($self->hosts, $plan);
+    $planner->planning($_, $plan) foreach @{$self->hosts};
+    $self->tests([ @{$plan->{prove_tests}}, @{$plan->{forkprove_tests}} ]);
+    $self->__setup_recovery_testing_command($plan);
 }
 
 sub __setup_recovery_testing_command {
     my ($self, $args) = @_;
-    my $class = 'App/Prove.pm';
-    require $class;
-    my $path = $INC{$class};
-    my $dirname = dirname $path;
-    my ($libdir) = $dirname =~ m|(.*)/perl5/|;
-    my ($rootdir) = $dirname =~ m|(.*)/lib/perl5/|;
-    my $prove = "$rootdir/bin/prove";
-    $self->prove(['perl', "-I$libdir", $prove, @{$args->{prove_command_args}}]);
+    my $bin = bin_dir 'App/Prove.pm';
+    my $lib = lib_dir 'App/Prove.pm';
+    my @prove_commands = map {
+        my $command_part = $_;
+        if ($command_part =~ /\$prove/) {
+            ("-I$lib", "$bin/prove")
+        } else {
+            $command_part;
+        }
+    } @{$args->{prove_command}};
+    $self->prove(\@prove_commands);
 }
 
 sub launch {

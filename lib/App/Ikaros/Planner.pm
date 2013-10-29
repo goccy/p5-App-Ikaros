@@ -110,10 +110,25 @@ sub __make_command {
     my $bin = "$lib/bin";
     my @coverage = ($host->coverage) ?
         ("-I$lib/lib/perl5", "-MDevel::Cover=-db,cover_db,-coverage,statement,time,+ignore,$lib,local/lib/perl5") : ();
-    $host->prove(($host->runner eq 'prove') ?
-        ['perl', "-I$lib", @coverage, "$bin/prove", '--state=save', @{$args->{prove_command_args}}] :
-        ['perl', "-I$lib", @coverage, "$bin/forkprove", '--state=save',  @{$args->{forkprove_command_args}}]
-    );
+
+    my @prove_commands = map {
+        my $command_part = $_;
+        if ($command_part =~ /\$prove/) {
+            ("-I$lib", @coverage, "$bin/prove", '--state=save')
+        } else {
+            $command_part;
+        }
+    } @{$args->{prove_command}};
+    my @forkprove_commands = map {
+        my $command_part = $_;
+        if ($command_part =~ /\$forkprove/) {
+            ("-I$lib", @coverage, "$bin/forkprove", '--state=save')
+        } else {
+            $command_part;
+        }
+    } @{$args->{forkprove_command}};
+
+    $host->prove(($host->runner eq 'prove') ? \@prove_commands : \@forkprove_commands);
 
     my $before_command = $self->__join_command($chdir, $args->{before_commands});
     my $main_command   = $self->__make_main_command($chdir . '/' . $args->{chdir}, $host);
