@@ -10,19 +10,20 @@ use List::MoreUtils qw/all/;
 use Encode qw/encode decode/;
 use YAML::XS qw/LoadFile Dump/;
 use Data::Dumper;
+
 __PACKAGE__->mk_accessors(qw/
     recovery_testing_command
 /);
 
 sub new {
-    my ($class, $options, $tests) = @_;
+    my ($class, $args) = @_;
     my $reporter = $class->SUPER::new({
-        recovery_testing_command => '',
-        filename => $options->{output_filename} || 'ikaros_output.xml',
-        verbose  => $options->{verbose} || 0,
+        recovery_testing_command => $args->{recovery_testing_command},
+        filename => $args->{options}->{output_filename} || 'ikaros_output.xml',
+        verbose  => $args->{options}->{verbose} || 0,
         tests    => +{}
     });
-    $reporter->__setup_mangled_name_for_junit($tests);
+    $reporter->__setup_mangled_name_for_junit($args->{tests});
     return $reporter;
 }
 

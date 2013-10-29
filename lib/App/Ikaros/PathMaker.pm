@@ -6,6 +6,8 @@ use base 'Exporter';
 
 our @EXPORT_OK = qw/
     perl
+    prove
+    forkprove
     lib
     lib_top_dir
     parent_lib_dir
@@ -17,6 +19,16 @@ sub perl($) {
     my ($host) = @_;
     my $env = ($host->perlbrew) ? 'source $HOME/perl5/perlbrew/etc/bashrc;' : '';
     return $env . 'perl';
+}
+
+sub prove {
+    my $path = dirname $INC{'App/Ikaros/PathMaker.pm'};
+    return "$path/Runner/prove";
+}
+
+sub forkprove {
+    my $path = dirname $INC{'App/Ikaros/PathMaker.pm'};
+    return "$path/Runner/forkprove";
 }
 
 sub lib($) {
@@ -51,7 +63,7 @@ sub lib_dir($) {
     @parent_dirs = grep { $_ ne '' } split '/', $class;
     my $depth = scalar @parent_dirs;
     my $size = scalar @dirs;
-    return '/' . join('/', @dirs[0 .. $size - ($depth+1)]) . '/bin';
+    return '/' . join('/', @dirs[0 .. $size - ($depth+1)]);
 }
 
 sub bin_dir($) {

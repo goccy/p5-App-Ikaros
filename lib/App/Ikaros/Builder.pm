@@ -8,7 +8,8 @@ use Capture::Tiny ':all';
 use App::Ikaros::Logger;
 use App::Ikaros::PathMaker qw/
     lib_top_dir
-    bin_dir
+    prove
+    forkprove
 /;
 
 __PACKAGE__->mk_accessors(qw/
@@ -62,7 +63,9 @@ sub __run_command_at_remote {
 
 sub __send_libraries {
     my ($self, $target) = @_;
-    my (@libs, @bins);
+
+    my @libs;
+    my @bins = (prove, forkprove);
 
     foreach my $class (qw{
         App/Prove.pm
@@ -73,9 +76,6 @@ sub __send_libraries {
         my $lib_top_dir = lib_top_dir $class;
         push @libs, $lib_top_dir if (-d $lib_top_dir);
     }
-
-    my $bin_dir = bin_dir 'App/Prove.pm';
-    push @bins, "$bin_dir/$_" foreach (qw/prove forkprove/);
 
     my $workdir = $target->workdir;
     $target->connection->rsync_put({
