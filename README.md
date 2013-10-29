@@ -35,7 +35,7 @@ App::Ikaros - distributed testing framework for jenkins
     hosts $conf;
 
     plan {
-        # test list for kprove
+        # test list for prove
         prove_tests     => $prove_tests,
 
         # test list for forkprove
@@ -44,10 +44,12 @@ App::Ikaros - distributed testing framework for jenkins
         # change directory to execute main command
         chdir => 'work',
 
-        # prove type of main command
+        # prove version of main command
+        # '$prove' is expanded -I/path/to/ikaros_lib /path/to/ikaros_lib/bin/prove
         prove_command     => [ 'perl', '$prove', '-Ilocal/lib/perl5' ],
 
-        # forkprove type of main command
+        # forkprove version of main command
+        # '$forkprove' is expanded -I/path/to/ikaros_lib /path/to/ikaros_lib/bin/forkprove
         forkprove_command => [ 'perl', '$forkprove', '-Ilocal/lib/perl5' ],
 
         # commands before main command
