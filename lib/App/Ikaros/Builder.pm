@@ -5,6 +5,9 @@ use parent qw/Class::Accessor::Fast/;
 use Coro;
 use Coro::Select;
 use Capture::Tiny ':all';
+use constant {
+    DEBUG => 0
+};
 use App::Ikaros::Logger;
 use App::Ikaros::PathMaker qw/
     lib_top_dir
@@ -37,6 +40,10 @@ sub build {
 
 sub __run {
     my ($self, $host) = @_;
+    if (DEBUG) {
+        my $num = (ref $host->tests eq 'ARRAY') ? scalar @{$host->tests} : 0;
+        print $host->hostname . ' : ' . $num, "\n";
+    }
     return unless defined $host->tests;
 
     my $filename = $host->trigger_filename;

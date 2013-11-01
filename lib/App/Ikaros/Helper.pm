@@ -7,8 +7,10 @@ use base 'Exporter';
 
 our @EXPORT_OK = qw/
     option_parser
+    include_blacklist
     exclude_blacklist
     load_from_yaml
+    uniq
 /;
 
 sub option_parser {
@@ -28,6 +30,13 @@ sub option_parser {
     return \%results;
 }
 
+sub include_blacklist {
+    my ($all_tests, $blacklist) = @_;
+    my %tests;
+    $tests{$_}++ foreach @$blacklist;
+    return [ grep { exists $tests{$_} } @$all_tests ];
+}
+
 sub exclude_blacklist {
     my ($all_tests, $blacklist) = @_;
     my %tests;
@@ -38,6 +47,13 @@ sub exclude_blacklist {
 sub load_from_yaml {
     my ($filename) = @_;
     return LoadFile $filename;
+}
+
+sub uniq($) {
+    my ($array) = shift;
+    my %uniq;
+    $uniq{$_}++ foreach @$array;
+    return [ keys %uniq ];
 }
 
 1;

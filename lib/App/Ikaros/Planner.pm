@@ -85,7 +85,7 @@ sub setup_testing_cluster {
     my $host_idx = 0;
     my @prove_tests_clusters = part { $host_idx++ % $self->prove_host_num } @$prove_tests;
     $host_idx = 0;
-    my @forkprove_tests_clusters = part { $host_idx++ % $self->prove_host_num } @$forkprove_tests;
+    my @forkprove_tests_clusters = part { $host_idx++ % $self->forkprove_host_num } @$forkprove_tests;
     foreach my $host (@$hosts) {
         if ($host->runner eq 'prove') {
             $host->tests(shift @prove_tests_clusters);
