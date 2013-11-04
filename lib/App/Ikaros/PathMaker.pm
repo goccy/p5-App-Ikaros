@@ -2,7 +2,7 @@ package App::Ikaros::PathMaker;
 use strict;
 use warnings;
 use File::Basename qw/dirname/;
-use base 'Exporter';
+use parent 'Exporter';
 
 our @EXPORT_OK = qw/
     perl
@@ -22,11 +22,13 @@ sub perl($) {
 }
 
 sub prove {
-    $INC{'App/Ikaros/Runner/Prove.pm'};
+    my $path = dirname $INC{'App/Ikaros/PathMaker.pm'};
+    return $path . '/Runner/Prove.pm';
 }
 
 sub forkprove {
-    $INC{'App/Ikaros/Runner/ForkProve.pm'};
+    my $path = dirname $INC{'App/Ikaros/PathMaker.pm'};
+    return $path . '/Runner/ForkProve.pm';
 }
 
 sub lib($) {

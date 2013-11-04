@@ -9,6 +9,7 @@ use XML::Simple;
 use List::MoreUtils qw/all/;
 use Encode qw/encode decode/;
 use YAML::XS qw/LoadFile Dump/;
+use File::Copy::Recursive qw/rcopy/;
 use Data::Dumper;
 
 __PACKAGE__->mk_accessors(qw/
@@ -42,6 +43,36 @@ sub __setup_mangled_name_for_junit {
     }
 }
 
+sub __setup_testsuites {
+    my ($self, $testsuites, $xml_data, $failed) = @_;
+
+    my $testsuite = $xml_data->{testsuite};
+    foreach my $test (@$testsuite) {
+        my $mangled_name = $test->{name};
+        my $name = $self->tests->{$mangled_name};
+        unless ($test->{failures} eq '0' && $test->{errors} eq '0') {
+            if ($name) {
+                $failed->{$name}++;
+            } else {
+                warn "nothing include $mangled_name";
+            }
+        } else {
+            #$test->{testcase} = [];
+        }
+        $testsuites->{$name} = $test if ($name);
+    }
+}
+
+sub __setup_dot_prove {
+    my ($self, $host, $dot_prove) = @_;
+
+    my $loaded_data = LoadFile $host->dot_prove_filename;
+    $dot_prove->{last_run_time} = $loaded_data->{last_run_time};
+    $dot_prove->{generation} = $loaded_data->{generation};
+    $dot_prove->{version} = $loaded_data->{version};
+    $dot_prove->{tests}{$_} = $loaded_data->{tests}{$_} foreach keys %{$loaded_data->{tests}};
+}
+
 sub report {
     my ($self, $hosts) = @_;
     my (%testsuites, %failed, %dot_prove, %cover_db);
@@ -53,27 +84,10 @@ sub report {
         next unless (defined $host->output_filename && -f $host->output_filename);
         my $xml_data = $self->__load_xml_data($host->output_filename);
         next unless (defined $xml_data);
-        my $testsuite = $xml_data->{testsuite};
-        foreach my $test (@$testsuite) {
-            my $mangled_name = $test->{name};
-            my $name = $self->tests->{$mangled_name};
-            unless ($test->{failures} eq '0' && $test->{errors} eq '0') {
-                if ($name) {
-                    $failed{$name}++;
-                } else {
-                    warn "nothing include $mangled_name";
-                }
-            } else {
-                #$test->{testcase} = [];
-            }
-            $testsuites{$name} = $test if ($name);
-        }
 
-        my $loaded_data = LoadFile $host->dot_prove_filename;
-        $dot_prove{last_run_time} = $loaded_data->{last_run_time};
-        $dot_prove{generation} = $loaded_data->{generation};
-        $dot_prove{version} = $loaded_data->{version};
-        $dot_prove{tests}->{$_} = $loaded_data->{tests}{$_} foreach keys %{$loaded_data->{tests}};
+        $self->__setup_testsuites(\%testsuites, $xml_data, \%failed);
+        $self->__setup_dot_prove($host, \%dot_prove);
+
         $cover_db{$host->cover_db_name}++ if ($host->coverage);
         unlink $host->output_filename;
         unlink $host->dot_prove_filename;
@@ -106,7 +120,7 @@ sub __load_xml_data {
     local $@;
     eval { $xml_data = $xml->XMLin($source); };
     if ($@) {
-        warn $@;
+        warn "[ERROR]: Cannot load from $filename. $@";
         return undef;
     }
     return $xml_data;
@@ -148,15 +162,7 @@ sub __generate_dot_prove {
 
 sub __generate_coverage {
     my ($self, $cover_db) = @_;
-    return unless (keys %$cover_db);
-
-    require 'Devel/Cover.pm';
-    my $path = $INC{'Devel/Cover.pm'};
-    my ($root_dir) = $path =~ m|(.*)/lib/perl5|;
-    my $cover = "$root_dir/bin/cover";
-    print Dumper $path;
-    my $cmd = sprintf "$cover %s", join ' ', keys %$cover_db;
-    print Dumper $cmd;
+    rcopy($_, 'merged_db') foreach (keys %$cover_db);
 }
 
 sub __retest {
