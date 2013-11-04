@@ -22,13 +22,11 @@ sub perl($) {
 }
 
 sub prove {
-    my $path = dirname $INC{'App/Ikaros/PathMaker.pm'};
-    return "$path/Runner/prove";
+    $INC{'App/Ikaros/Runner/Prove.pm'};
 }
 
 sub forkprove {
-    my $path = dirname $INC{'App/Ikaros/PathMaker.pm'};
-    return "$path/Runner/forkprove";
+    $INC{'App/Ikaros/Runner/ForkProve.pm'};
 }
 
 sub lib($) {

@@ -13,17 +13,20 @@ use Data::Dumper;
 
 __PACKAGE__->mk_accessors(qw/
     recovery_testing_command
+    output_filename
+    verbose
+    tests
 /);
 
 sub new {
-    my ($class, $args) = @_;
+    my ($class, $options) = @_;
     my $reporter = $class->SUPER::new({
-        recovery_testing_command => $args->{recovery_testing_command},
-        filename => $args->{options}->{output_filename} || 'ikaros_output.xml',
-        verbose  => $args->{options}->{verbose} || 0,
+        recovery_testing_command => $options->{recovery_testing_command},
+        output_filename => $options->{output_filename} || 'ikaros_output.xml',
+        verbose  => $options->{verbose} || 0,
         tests    => +{}
     });
-    $reporter->__setup_mangled_name_for_junit($args->{tests});
+    $reporter->__setup_mangled_name_for_junit($options->{tests});
     return $reporter;
 }
 
@@ -35,14 +38,14 @@ sub __setup_mangled_name_for_junit {
         $mangled_name =~ s/-/_/g;
         $mangled_name =~ s/\./_/g;
         $mangled_name =~ s/\//_/g;
-        $self->{tests}->{$mangled_name} = $test_name;
+        $self->tests->{$mangled_name} = $test_name;
     }
 }
 
 sub report {
     my ($self, $hosts) = @_;
     my (%testsuites, %failed, %dot_prove, %cover_db);
-    my $verbose = $self->{verbose};
+    my $verbose = $self->verbose;
 
     foreach my $host (@$hosts) {
         next unless ($host->tests);
@@ -53,7 +56,7 @@ sub report {
         my $testsuite = $xml_data->{testsuite};
         foreach my $test (@$testsuite) {
             my $mangled_name = $test->{name};
-            my $name = $self->{tests}->{$mangled_name};
+            my $name = $self->tests->{$mangled_name};
             unless ($test->{failures} eq '0' && $test->{errors} eq '0') {
                 if ($name) {
                     $failed{$name}++;
@@ -128,7 +131,7 @@ sub __generate_result {
         testsuite => [ values %$testsuites ]
     };
     my $xml = XML::Simple->new()->XMLout($result, RootName => 'testsuites');
-    open my $xml_fh, '>', $self->{filename};
+    open my $xml_fh, '>', $self->output_filename;
     print $xml_fh "<?xml version='1.0' encoding='utf-8'?>\n";
     print $xml_fh $xml;
     close $xml_fh;

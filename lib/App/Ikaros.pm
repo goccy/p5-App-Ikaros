@@ -17,7 +17,8 @@ __PACKAGE__->mk_accessors(qw/
     hosts
     config
     tests
-    options
+    output_filename
+    verbose
     recovery_testing_command
 /);
 
@@ -32,7 +33,9 @@ sub new {
 
     my $ikaros = $class->SUPER::new({
         config   => $loaded_conf,
-        hosts    => []
+        hosts    => [],
+        verbose  => $options->{verbose},
+        output_filename => $options->{output_filename}
     });
 
     $ikaros->__setup_landing_points;
@@ -69,7 +72,6 @@ sub __setup_recovery_testing_command {
             $command_part;
         }
     } @{$args->{prove_command}};
-    print Dumper \@prove_commands;
     $self->recovery_testing_command(\@prove_commands);
 }
 
@@ -77,8 +79,9 @@ sub launch {
     my ($self, $callback) = @_;
     App::Ikaros::Builder->new->build($self->hosts);
     my $failed_tests = App::Ikaros::Reporter->new({
-        options => $self->options,
+        verbose => $self->verbose,
         tests   => $self->tests,
+        output_filename => $self->output_filename,
         recovery_testing_command => $self->recovery_testing_command
     })->report($self->hosts);
     return &$callback($failed_tests);
@@ -94,11 +97,12 @@ App::Ikaros - distributed testing framework for jenkins
 
 =head1 SYNOPSIS
 
-    ### [RUNNER] : bin/ikaros ###
+=head3  [EXECUTOR]
+
     use App::Ikaros;
 
     my $status = App::Ikaros->new({
-        config => 'config/ikaros.conf',
+        config      => 'config/ikaros.conf',
         config_type => 'dsl',
     })->launch(sub {
         my $failed_tests = shift;
@@ -106,7 +110,8 @@ App::Ikaros - distributed testing framework for jenkins
         # notify IRC or register issue tickets..
     });
 
-    ### [CONFIGURATION] : config/ikaros.conf ###
+=head3 [PLAN CONFIGURATION] : config/ikaros.conf
+
     use App::Ikaros::Helper qw/
         exclude_blacklist
         load_from_yaml
@@ -154,7 +159,7 @@ App::Ikaros - distributed testing framework for jenkins
         after_commands => []
     };
 
-    ### [HOST CONFIGURATION] hosts.conf ###
+=head3 [HOST CONFIGURATION] config/hosts.conf
 
     # default status each hosts
     default:

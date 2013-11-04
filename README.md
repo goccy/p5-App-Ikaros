@@ -4,11 +4,12 @@ App::Ikaros - distributed testing framework for jenkins
 
 # SYNOPSIS
 
-    ### [RUNNER] : bin/ikaros ###
+### \[EXECUTOR\]
+
     use App::Ikaros;
 
     my $status = App::Ikaros->new({
-        config => 'config/ikaros.conf',
+        config      => 'config/ikaros.conf',
         config_type => 'dsl',
     })->launch(sub {
         my $failed_tests = shift;
@@ -16,7 +17,8 @@ App::Ikaros - distributed testing framework for jenkins
         # notify IRC or register issue tickets..
     });
 
-    ### [CONFIGURATION] : config/ikaros.conf ###
+### \[PLAN CONFIGURATION\] : config/ikaros.conf
+
     use App::Ikaros::Helper qw/
         exclude_blacklist
         load_from_yaml
@@ -64,7 +66,7 @@ App::Ikaros - distributed testing framework for jenkins
         after_commands => []
     };
 
-    ### [HOST CONFIGURATION] hosts.conf ###
+### \[HOST CONFIGURATION\] config/hosts.conf
 
     # default status each hosts
     default:

@@ -128,7 +128,7 @@ sub run {
             $stdout .= $s;
             print $s;
         };
-        my $err = sub { shift };
+        my $err = sub { warn shift; };
         IPC::Run::run \@argv, \$in, $out, $err;
     };
     return map {

@@ -4,8 +4,8 @@ use warnings;
 use parent qw/Class::Accessor::Fast/;
 use List::Util qw/shuffle/;
 use List::MoreUtils qw/part/;
-use YAML::XS;
 use App::Ikaros::PathMaker;
+use App::Ikaros::Helper qw/load_from_yaml/;
 use Data::Dumper;
 use constant {
     PROVE_STATE_FILE => '.prove',
@@ -14,8 +14,6 @@ use constant {
 __PACKAGE__->mk_accessors(qw/
     prove_tests
     forkprove_tests
-    prove_host_num
-    forkprove_host_num
     saved_tests
     sorted_tests
 /);
@@ -25,25 +23,26 @@ sub new {
     unless ($args->{prove_tests} || $args->{forkprove_tests}) {
         die "must be set 'prove_tests' and 'forkprove_tests(optional)'";
     }
-    my $self = $class->SUPER::new({
-        %$args,
-        prove_host_num     => 0,
-        forkprove_host_num => 0,
-    });
-    $self->load_prove_state([ @{$args->{prove_tests}}, @{$args->{forkprove_tests}} ])
+    my $self = $class->SUPER::new({ %$args });
+    $self->__load_prove_state([ @{$args->{prove_tests}}, @{$args->{forkprove_tests}} ])
         if (-f PROVE_STATE_FILE);
-    $self->setup_testing_cluster($hosts);
+    $self->__setup_testing_cluster($hosts);
     return $self;
 }
 
-sub load_prove_state {
+sub planning {
+    my ($self, $host, $args) = @_;
+    my $commands = $self->__make_command($args, $host);
+    $host->plan($commands);
+}
+
+sub __load_prove_state {
     my ($self, $tests) = @_;
+
     my %tests_map;
     $tests_map{$_}++ foreach @$tests;
-    open my $fh, '<', PROVE_STATE_FILE;
-    my $code = do { local $/; <$fh> };
-    my $yaml = Load $code;
-    my $saved_tests = $yaml->{tests};
+    my $saved_tests = (load_from_yaml PROVE_STATE_FILE)->{tests};
+
     my %elapsed_times;
     foreach my $saved_test (keys %$saved_tests) {
         next unless exists $tests_map{$saved_test};
@@ -57,6 +56,37 @@ sub load_prove_state {
     $self->sorted_tests(\@elapsed_times);
 }
 
+sub __setup_testing_cluster {
+    my ($self, $hosts) = @_;
+
+    my ($prove_host_num, $forkprove_host_num);
+    foreach my $host (@$hosts) {
+        if ($host->runner eq 'prove') {
+            $prove_host_num++;
+        } elsif ($host->runner eq 'forkprove') {
+            $forkprove_host_num++;
+        } else {
+            die "unknown keyword at runner [$host->{runner}]";
+        }
+    }
+    my $prove_test_clusters     = $self->__make_test_cluster($self->prove_tests, $prove_host_num);
+    my $forkprove_test_clusters = $self->__make_test_cluster($self->forkprove_tests, $forkprove_host_num);
+    foreach my $host (@$hosts) {
+        if ($host->runner eq 'prove') {
+            $host->tests(shift @$prove_test_clusters);
+        } else {
+            $host->tests(shift @$forkprove_test_clusters);
+        }
+    }
+}
+
+sub __make_test_cluster {
+    my ($self, $tests, $host_num) = @_;
+    my $sorted_tests = $self->__get_sorted_tests($tests);
+    my $host_idx = 0;
+    return [ part { $host_idx++ % $host_num } @$sorted_tests ];
+}
+
 sub __get_sorted_tests {
     my ($self, $tests) = @_;
     if (defined $self->saved_tests) {
@@ -67,38 +97,6 @@ sub __get_sorted_tests {
         return [ @sorted_tests, @new_tests ];
     }
     return [ shuffle @$tests ];
-}
-
-sub setup_testing_cluster {
-    my ($self, $hosts) = @_;
-    foreach my $host (@$hosts) {
-        if ($host->runner eq 'prove') {
-            $self->{prove_host_num}++;
-        } elsif ($host->runner eq 'forkprove') {
-            $self->{forkprove_host_num}++;
-        } else {
-            die "unknown keyword at runner [$host->{runner}]";
-        }
-    }
-    my $prove_tests = $self->__get_sorted_tests($self->prove_tests);
-    my $forkprove_tests = $self->__get_sorted_tests($self->forkprove_tests);
-    my $host_idx = 0;
-    my @prove_tests_clusters = part { $host_idx++ % $self->prove_host_num } @$prove_tests;
-    $host_idx = 0;
-    my @forkprove_tests_clusters = part { $host_idx++ % $self->prove_host_num } @$forkprove_tests;
-    foreach my $host (@$hosts) {
-        if ($host->runner eq 'prove') {
-            $host->tests(shift @prove_tests_clusters);
-        } else {
-            $host->tests(shift @forkprove_tests_clusters);
-        }
-    }
-}
-
-sub planning {
-    my ($self, $host, $args) = @_;
-    my $commands = $self->__make_command($args, $host);
-    $host->plan($commands);
 }
 
 sub __make_command {
