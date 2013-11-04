@@ -69,8 +69,10 @@ sub __setup_testing_cluster {
             die "unknown keyword at runner [$host->{runner}]";
         }
     }
+
     my $prove_test_clusters     = $self->__make_test_cluster($self->prove_tests, $prove_host_num);
     my $forkprove_test_clusters = $self->__make_test_cluster($self->forkprove_tests, $forkprove_host_num);
+
     foreach my $host (@$hosts) {
         if ($host->runner eq 'prove') {
             $host->tests(shift @$prove_test_clusters);

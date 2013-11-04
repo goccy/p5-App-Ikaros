@@ -190,6 +190,7 @@ sub __slurp {
 
 sub __recv_report {
     my ($self, $host) = @_;
+    print "fetch from " . $host->hostname, "\n";
     $host->connection->scp_get({}, $host->workdir . '/junit_output.xml', $host->output_filename);
     $host->connection->scp_get({}, $host->workdir . '/.prove', $host->dot_prove_filename);
     $host->connection->scp_get({
