@@ -31,7 +31,7 @@ App::Ikaros - distributed testing framework for jenkins
     my $prove_tests = $blacklist;
     my $forkprove_tests = exclude_blacklist($all_tests, $blacklist); # [ 't/test1.t', 't/test2.t' ]
 
-    my $conf = load_from_yaml('config/hosts.conf');
+    my $conf = load_from_yaml('config/hosts.yaml');
 
     # setup host status
     hosts $conf;
@@ -66,7 +66,7 @@ App::Ikaros - distributed testing framework for jenkins
         after_commands => []
     };
 
-### \[HOST CONFIGURATION\] config/hosts.conf
+### \[HOST CONFIGURATION\] : config/hosts.yaml
 
     # default status each hosts
     default:
