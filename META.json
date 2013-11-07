@@ -64,6 +64,11 @@
          "requires" : {
             "perl" : "5.008001"
          }
+      },
+      "test" : {
+         "requires" : {
+            "Test::MockObject" : "0"
+         }
       }
    },
    "release_status" : "unstable",
