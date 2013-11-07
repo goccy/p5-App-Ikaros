@@ -494,6 +494,18 @@ DISTRIBUTIONS
       Test::More 0
       Test::NoWarnings 0.02
       Test::Tester 0.04
+  Test-Exception-0.32
+    pathname: A/AD/ADIE/Test-Exception-0.32.tar.gz
+    provides:
+      Test::Exception 0.32
+    requirements:
+      Module::Build 0.38
+      Sub::Uplevel 0.18
+      Test::Builder 0.7
+      Test::Builder::Tester 1.07
+      Test::Harness 2.03
+      Test::More 0.7
+      Test::Simple 0.7
   Test-Harness-3.29
     pathname: O/OV/OVID/Test-Harness-3.29.tar.gz
     provides:
@@ -548,6 +560,28 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       parent 0
+  Test-MockObject-1.20120301
+    pathname: C/CH/CHROMATIC/Test-MockObject-1.20120301.tar.gz
+    provides:
+      Test::MockObject 1.20120301
+      Test::MockObject::Extends 1.20120301
+    requirements:
+      CGI 0
+      Carp 0
+      Devel::Peek 0
+      ExtUtils::MakeMaker 6.30
+      Scalar::Util 0
+      Test::Builder 0
+      Test::Exception 0.31
+      Test::More 0.98
+      Test::Warn 0.23
+      UNIVERSAL::can 1.20110617
+      UNIVERSAL::isa 1.20110614
+      base 0
+      overload 0
+      strict 0
+      vars 0
+      warnings 0
   Test-NoWarnings-1.04
     pathname: A/AD/ADAMK/Test-NoWarnings-1.04.tar.gz
     provides:
@@ -598,6 +632,35 @@ DISTRIBUTIONS
       perl 5.008001
       strict 0
       warnings 0
+  UNIVERSAL-can-1.20120726
+    pathname: C/CH/CHROMATIC/UNIVERSAL-can-1.20120726.tar.gz
+    provides:
+      Test::SmallWarn undef
+      UNIVERSAL::can 1.20120726
+    requirements:
+      ExtUtils::MakeMaker 6.30
+      Scalar::Util 0
+      Test::More 0
+      overload 0
+      strict 0
+      vars 0
+      warnings 0
+      warnings::register 0
+  UNIVERSAL-isa-1.20120726
+    pathname: C/CH/CHROMATIC/UNIVERSAL-isa-1.20120726.tar.gz
+    provides:
+      UNIVERSAL::isa 1.20120726
+    requirements:
+      CGI 0
+      ExtUtils::MakeMaker 6.30
+      Scalar::Util 0
+      Test::More 0
+      UNIVERSAL 0
+      overload 0
+      strict 0
+      vars 0
+      warnings 0
+      warnings::register 0
   URI-1.60
     pathname: G/GA/GAAS/URI-1.60.tar.gz
     provides:

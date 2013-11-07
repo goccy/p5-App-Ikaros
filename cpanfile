@@ -16,3 +16,7 @@ on build => sub {
     requires 'XML::Simple';
     requires 'Devel::Cover';
 };
+
+on test => sub {
+    requires 'Test::MockObject';
+};
