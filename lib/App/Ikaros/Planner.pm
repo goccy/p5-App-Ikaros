@@ -114,7 +114,7 @@ sub __make_command {
     my @prove_commands = map {
         my $command_part = $_;
         if ($command_part =~ /\$prove/) {
-            ("-I$lib", @coverage, "$bin/prove", '--state=save')
+            ("-I$lib", @coverage, "$bin/Prove.pm", '--state=save')
         } else {
             $command_part;
         }
@@ -122,7 +122,7 @@ sub __make_command {
     my @forkprove_commands = map {
         my $command_part = $_;
         if ($command_part =~ /\$forkprove/) {
-            ("-I$lib", @coverage, "$bin/forkprove", '--state=save')
+            ("-I$lib", @coverage, "$bin/ForkProve.pm", '--state=save')
         } else {
             $command_part;
         }

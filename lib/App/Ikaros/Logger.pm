@@ -37,7 +37,7 @@ sub logging {
                 $handle->push_read(line => sub {
                     my $line = $_[1];
                     print STDERR sprintf "[%s] %s\n", $name, $line if ($handle_name eq 'stdout');
-                    print STDERR sprintf "[%s] <<< %s >>>\n", $name, $line if ($handle_name eq 'stderr');
+                    #print STDERR sprintf "[%s] <<< %s >>>\n", $name, $line if ($handle_name eq 'stderr');
                     if ($line =~ /^IKAROS:BUILD_START/) {
                         $building = 1;
                     } elsif ($line =~ /^IKAROS:BUILD_END/) {
