@@ -10,10 +10,14 @@ use List::MoreUtils qw/all/;
 use Encode qw/encode decode/;
 use YAML::XS qw/LoadFile Dump/;
 use File::Copy::Recursive qw/rcopy/;
+use App::Ikaros::Profiler;
+use constant { DEBUG => 0 };
 use Data::Dumper;
 
 __PACKAGE__->mk_accessors(qw/
     recovery_testing_command
+    enable_profile
+    profiler
     output_filename
     verbose
     tests
@@ -23,6 +27,8 @@ sub new {
     my ($class, $options) = @_;
     my $reporter = $class->SUPER::new({
         recovery_testing_command => $options->{recovery_testing_command},
+        enable_profile  => $options->{enable_profile} || 0,
+        profiler        => App::Ikaros::Profiler->new,
         output_filename => $options->{output_filename} || 'ikaros_output.xml',
         verbose  => $options->{verbose} || 0,
         tests    => +{}
@@ -71,6 +77,7 @@ sub __setup_dot_prove {
     $dot_prove->{generation} = $loaded_data->{generation};
     $dot_prove->{version} = $loaded_data->{version};
     $dot_prove->{tests}{$_} = $loaded_data->{tests}{$_} foreach keys %{$loaded_data->{tests}};
+    $self->profiler->add_profile($host, $loaded_data) if ($self->enable_profile);
 }
 
 sub report {
@@ -93,6 +100,11 @@ sub report {
         unlink $host->dot_prove_filename;
     }
 
+    if ($self->enable_profile) {
+        $self->profiler->setup;
+        $self->profiler->dump;
+    }
+
     my $prove_command_line = $self->recovery_testing_command;
     my @failed_tests = keys %failed;
 
@@ -112,7 +124,7 @@ sub report {
 
 sub __load_xml_data {
     my ($self, $filename) = @_;
-    my $source = $self->__slurp($filename);
+    my $source = App::Ikaros::IO::read($filename);
     $source =~ s|<system-out>(.*?)</system-out>|<system-out></system-out>|smg;
     $XML::Simple::PREFERRED_PARSER = 'XML::Parser';
     my $xml = XML::Simple->new(ForceArray => 1, KeyAttr => ['partnum']);
@@ -145,24 +157,20 @@ sub __generate_result {
         testsuite => [ values %$testsuites ]
     };
     my $xml = XML::Simple->new()->XMLout($result, RootName => 'testsuites');
-    open my $xml_fh, '>', $self->output_filename;
-    print $xml_fh "<?xml version='1.0' encoding='utf-8'?>\n";
-    print $xml_fh $xml;
-    close $xml_fh;
+    my $xml_header = "<?xml version='1.0' encoding='utf-8'?>\n";
+    App::Ikaros::IO::write($self->output_filename, $xml_header . $xml);
 }
 
 sub __generate_dot_prove {
     my ($self, $merged_dot_prove) = @_;
-    my $dot_prove = '.prove';
-    open my $fh, '>', $dot_prove;
-    print $fh Dump $merged_dot_prove;
-    print $fh "...\n\n";
-    close $fh;
+    App::Ikaros::IO::write('.prove', Dump($merged_dot_prove) . "...\n\n");
 }
 
 sub __generate_coverage {
     my ($self, $cover_db) = @_;
     rcopy($_, 'merged_db') foreach (keys %$cover_db);
+    rcopy("$_/cover_db/runs", 'merged_db/runs') foreach (keys %$cover_db);
+    rcopy("$_/cover_db/structure", 'merged_db/structure') foreach (keys %$cover_db);
 }
 
 sub __retest {
@@ -188,15 +196,11 @@ sub __retest {
     } split /\n/xms, $stdout;
 }
 
-sub __slurp {
-    my ($self, $filename) = @_;
-    open my $fh, '<', $filename;
-    return do { local $/; <$fh> };
-}
-
 sub __recv_report {
     my ($self, $host) = @_;
-    print "fetch from " . $host->hostname, "\n";
+    if (DEBUG) {
+        print "fetch from " . $host->hostname, "\n";
+    }
     $host->connection->scp_get({}, $host->workdir . '/junit_output.xml', $host->output_filename);
     $host->connection->scp_get({}, $host->workdir . '/.prove', $host->dot_prove_filename);
     $host->connection->scp_get({

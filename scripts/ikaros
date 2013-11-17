@@ -5,9 +5,10 @@ use App::Ikaros;
 use Data::Dumper;
 
 my $status = App::Ikaros->new({
-    config => 'config/ikaros.conf',
+    config => 'config/sakura_ikaros.conf',
     config_type => 'dsl',
-    config_options => []
+    config_options => [],
+    enable_profile => 0
 })->launch(sub {
     my $failed_tests = shift;
     my $failed_tests_num = scalar @$failed_tests;

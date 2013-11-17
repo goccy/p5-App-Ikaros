@@ -18,6 +18,7 @@ __PACKAGE__->mk_accessors(qw/
     config
     tests
     output_filename
+    enable_profile
     verbose
     recovery_testing_command
 /);
@@ -35,6 +36,7 @@ sub new {
         config   => $loaded_conf,
         hosts    => [],
         verbose  => $options->{verbose},
+        enable_profile  => $options->{enable_profile},
         output_filename => $options->{output_filename}
     });
 
@@ -62,25 +64,22 @@ sub __planning {
 
 sub __setup_recovery_testing_command {
     my ($self, $args) = @_;
-    my $prove = prove;
     my $lib = lib_dir 'App/Prove.pm';
     my @prove_commands = map {
-        my $command_part = $_;
-        if ($command_part =~ /\$prove/) {
-            ("-I$lib", "$prove")
-        } else {
-            $command_part;
-        }
+        ($_ =~ /\$prove/) ? ("-I$lib", prove) : $_;
     } @{$args->{prove_command}};
     $self->recovery_testing_command(\@prove_commands);
 }
 
 sub launch {
     my ($self, $callback) = @_;
-    App::Ikaros::Builder->new->build($self->hosts);
+    my $builder = App::Ikaros::Builder->new;
+    $builder->rsync($self->hosts, $self->config->{plan}{rsync});
+    $builder->build($self->hosts);
     my $failed_tests = App::Ikaros::Reporter->new({
         verbose => $self->verbose,
         tests   => $self->tests,
+        enable_profile  => $self->enable_profile,
         output_filename => $self->output_filename,
         recovery_testing_command => $self->recovery_testing_command
     })->report($self->hosts);

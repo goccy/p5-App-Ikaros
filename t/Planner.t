@@ -34,6 +34,7 @@ $planner->planning($_, $plan) foreach @$hosts;
 
 is_deeply($hosts->[0]->{prove}, [
     '-I$HOME/ikaros_lib',
+    '-I$HOME/ikaros_lib/lib/perl5',
     '$HOME/ikaros_lib/bin/Prove.pm',
     '--state=save'
 ], 'prove commands');

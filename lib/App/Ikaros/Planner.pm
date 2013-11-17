@@ -101,6 +101,13 @@ sub __get_sorted_tests {
     return [ shuffle @$tests ];
 }
 
+sub devel_cover_opt {
+    my ($self, $host) = @_;
+    my $workdir = $host->workdir;
+    my $lib = "$workdir/ikaros_lib";
+    return "-MDevel::Cover=-db,cover_db,-coverage,statement,time,+ignore,$lib,local/lib/perl5";
+}
+
 sub __make_command {
     my ($self, $args, $host) = @_;
     my $workdir = $host->workdir;
@@ -108,24 +115,13 @@ sub __make_command {
 
     my $lib = "$workdir/ikaros_lib";
     my $bin = "$lib/bin";
-    my @coverage = ($host->coverage) ?
-        ("-I$lib/lib/perl5", "-MDevel::Cover=-db,cover_db,-coverage,statement,time,+ignore,$lib,local/lib/perl5") : ();
+    my $cover_opt = ($host->coverage) ? $self->devel_cover_opt($host) : '';
 
     my @prove_commands = map {
-        my $command_part = $_;
-        if ($command_part =~ /\$prove/) {
-            ("-I$lib", @coverage, "$bin/Prove.pm", '--state=save')
-        } else {
-            $command_part;
-        }
+        ($_ =~ /\$prove/) ? ("-I$lib", "-I$lib/lib/perl5", "$bin/Prove.pm", '--state=save') : $_;
     } @{$args->{prove_command}};
     my @forkprove_commands = map {
-        my $command_part = $_;
-        if ($command_part =~ /\$forkprove/) {
-            ("-I$lib", @coverage, "$bin/ForkProve.pm", '--state=save')
-        } else {
-            $command_part;
-        }
+        ($_ =~ /\$forkprove/) ? ("-I$lib", "-I$lib/lib/perl5", $cover_opt, "$bin/ForkProve.pm", '--state=save') : $_;
     } @{$args->{forkprove_command}};
 
     $host->prove(($host->runner eq 'prove') ? \@prove_commands : \@forkprove_commands);
@@ -148,6 +144,8 @@ sub __make_main_command {
     my $workdir = $host->workdir;
     my $trigger_filename = $host->trigger_filename;
     my $continuous_template = '((%s) || echo 1)';
+    my $devel_cover_opt = $self->devel_cover_opt($host);
+    my $cover_env = ($host->coverage) ? "export HARNESS_PERL_SWITCHES=$devel_cover_opt;" : '';
 
     my $build_start_flag = "echo 'IKAROS:BUILD_START'";
     my $build_end_flag   = "echo 'IKAROS:BUILD_END'";
@@ -155,7 +153,7 @@ sub __make_main_command {
     my $move_dot_prove = $self->__move_result_to_dir('.prove', $workdir);
     my $move_cover_db  = ($host->coverage) ? $self->__move_result_to_dir('cover_db', $workdir) : 'echo \'skip move cover_db\'';
     my $perl = App::Ikaros::PathMaker::perl($host);
-    my $kick_command = sprintf $continuous_template, "$perl -I$workdir/ikaros_lib $workdir/$trigger_filename";
+    my $kick_command = $cover_env . sprintf $continuous_template, "$perl -I$workdir/ikaros_lib $workdir/$trigger_filename";
     return join ' && ', (
         $chdir,
         $build_start_flag,
