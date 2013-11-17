@@ -115,13 +115,13 @@ sub __make_command {
 
     my $lib = "$workdir/ikaros_lib";
     my $bin = "$lib/bin";
-    my $cover_opt = ($host->coverage) ? $self->devel_cover_opt($host) : '';
+    my @cover_opt = ($host->coverage) ? ($self->devel_cover_opt($host)) : ();
 
     my @prove_commands = map {
         ($_ =~ /\$prove/) ? ("-I$lib", "-I$lib/lib/perl5", "$bin/Prove.pm", '--state=save') : $_;
     } @{$args->{prove_command}};
     my @forkprove_commands = map {
-        ($_ =~ /\$forkprove/) ? ("-I$lib", "-I$lib/lib/perl5", $cover_opt, "$bin/ForkProve.pm", '--state=save') : $_;
+        ($_ =~ /\$forkprove/) ? ("-I$lib", "-I$lib/lib/perl5", @cover_opt, "$bin/ForkProve.pm", '--state=save') : $_;
     } @{$args->{forkprove_command}};
 
     $host->prove(($host->runner eq 'prove') ? \@prove_commands : \@forkprove_commands);
