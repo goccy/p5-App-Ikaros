@@ -5,7 +5,7 @@ use App::Ikaros;
 use Data::Dumper;
 
 my $status = App::Ikaros->new({
-    config => 'config/sakura_ikaros.conf',
+    config => 'config/ikaros.conf',
     config_type => 'dsl',
     config_options => [],
     enable_profile => 0
