@@ -11,7 +11,7 @@ use App::Ikaros::Reporter;
 use App::Ikaros::PathMaker qw/prove lib_dir/;
 use Data::Dumper;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 __PACKAGE__->mk_accessors(qw/
     hosts
