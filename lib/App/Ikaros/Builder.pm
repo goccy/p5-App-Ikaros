@@ -7,7 +7,11 @@ use Coro::Select;
 use Capture::Tiny ':all';
 use App::Ikaros::Util qw/run_command_on_remote/;
 use App::Ikaros::Installer;
-use constant { DEBUG => 0 };
+use constant { 
+    DEBUG => 0,
+    BUILDING => 0,
+    BUILD_END => 1,
+};
 
 __PACKAGE__->mk_accessors(qw/installer/);
 
@@ -46,10 +50,21 @@ sub __rsync {
 sub build {
     my ($self, $hosts) = @_;
     my @coros;
+    my %build_status = map { $_->hostname => BUILDING } @$hosts;
     foreach my $host (@$hosts) {
-        push @coros, async { $self->__run($host); };
+        push @coros, async { 
+            $self->__run($host);
+            $build_status{$host->hostname} = BUILD_END;
+            $self->__display_build_status(\%build_status);
+        };
     }
     $_->join foreach @coros;
+}
+
+sub __display_build_status {
+    my ($self, $build_status) = @_;
+    my @building_hosts = grep { $build_status->{$_} == BUILDING } keys(%$build_status);
+    print STDERR sprintf "IKAROS:BUILDING_HOSTS %s\n", join(",", @building_hosts);
 }
 
 sub __run {
