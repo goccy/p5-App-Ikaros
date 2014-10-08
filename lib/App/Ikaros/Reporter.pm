@@ -188,7 +188,7 @@ sub __retest {
     };
 
     return map {
-        if ($_ =~ /\A(.*?)\s*\(Wstat: [1-9]/ms) {
+        if ($_ =~ /\A(.*?)\s*\(Wstat: [0-9]/ms) {
             $1;
         } else {
             ();
