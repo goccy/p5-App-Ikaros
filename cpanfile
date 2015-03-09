@@ -15,6 +15,7 @@ on build => sub {
     requires 'IPC::Run';
     requires 'XML::Simple';
     requires 'Devel::Cover';
+    requires 'File::Copy::Recursive';
 };
 
 on test => sub {

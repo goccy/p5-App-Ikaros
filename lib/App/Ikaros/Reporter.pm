@@ -173,6 +173,25 @@ sub __generate_coverage {
     rcopy("$_/cover_db/structure", 'merged_db/structure') foreach (keys %$cover_db);
 }
 
+sub __parse_failed_test_name {
+    my $line = shift;
+
+    if ($line =~ /\A(.*?)\s*\(Wstat: ([0-9]+) Tests: ([0-9]+) Failed: ([0-9]+)/ms) {
+        my $file = $1;
+        my ($wstat, $tests, $failed) = ($2, $3, $4);
+
+        return $file if $wstat || $failed;
+    }
+
+    return;
+}
+
+sub parse_failed_tests_from_output {
+    my ($invocant, $stdout) = @_;
+
+    map { __parse_failed_test_name($_) } split /\n/xms, $stdout;
+}
+
 sub __retest {
     my ($self, @argv) = @_;
     my $stdout = '';
@@ -187,13 +206,7 @@ sub __retest {
         IPC::Run::run \@argv, \$in, $out, $err;
     };
 
-    return map {
-        if ($_ =~ /\A(.*?)\s*\(Wstat: [1-9]/ms) {
-            $1;
-        } else {
-            ();
-        }
-    } split /\n/xms, $stdout;
+    return $self->parse_failed_tests_from_output($stdout);
 }
 
 sub __recv_report {
