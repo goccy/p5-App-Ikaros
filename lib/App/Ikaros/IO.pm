@@ -4,17 +4,17 @@ use warnings;
 
 sub read {
     my ($filename) = @_;
-    open my $fh, '<', $filename;
+    open my $fh, '<', $filename or die $!;
     my $content = do { local $/; <$fh> };
-    close $fh;
+    close $fh or die $!;
     return $content;
 }
 
 sub write {
     my ($filename, $content) = @_;
-    open my $fh, '>', $filename;
+    open my $fh, '>', $filename or die $!;
     print $fh $content;
-    close $fh;
+    close $fh or die $!;
 }
 
 1;
