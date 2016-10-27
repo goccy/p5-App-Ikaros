@@ -1,6 +1,7 @@
 package App::Ikaros::Config::Loader;
 use strict;
 use warnings;
+use Module::Load qw//;
 
 sub new {
     my ($class, $options) = @_;
@@ -16,9 +17,10 @@ sub new {
     unless ($engine_name =~ /(yaml|dsl)/) {
         die "unknown engine [$engine_name]";
     }
-    my $engine = 'App/Ikaros/Config/Loader/Engine/' . uc($engine_name);
-    require "$engine.pm";
-    $engine =~ s|/|::|g;
+
+    my $engine =  __PACKAGE__ . '::Engine::' . uc($engine_name);
+    Module::Load::load $engine;
+
     return bless {
         config => $options->{config},
         engine => $engine->new($options->{config_options})
