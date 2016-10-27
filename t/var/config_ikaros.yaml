@@ -1,0 +1,13 @@
+default:
+  user: Foo
+  runner: forkprove
+  coverage: true
+  perlbrew: true
+  workdir: hoge/ikaros_workspace
+
+hosts:
+  - remote:
+      workdir: hoge/ikaros_workspace_2
+  - remote:
+      runner: prove
+      workdir: hoge/ikaros_workspace_3
