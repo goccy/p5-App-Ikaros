@@ -16,6 +16,7 @@ on build => sub {
     requires 'XML::Simple';
     requires 'Devel::Cover';
     requires 'File::Copy::Recursive';
+    requires 'Module::Load';
 };
 
 on test => sub {
