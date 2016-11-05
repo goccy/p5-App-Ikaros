@@ -31,6 +31,8 @@ sub new {
         config_type    => $options->{config_type},
         config_options => $options->{config_options}
     })->load;
+    $loaded_conf->{plan}{prove_tests} ||= [];
+    $loaded_conf->{plan}{forkprove_tests} ||= [];
 
     my $ikaros = $class->SUPER::new({
         config   => $loaded_conf,

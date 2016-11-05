@@ -20,7 +20,7 @@ __PACKAGE__->mk_accessors(qw/
 
 sub new {
     my ($class, $hosts, $args) = @_;
-    unless ($args->{prove_tests} || $args->{forkprove_tests}) {
+    unless (@{$args->{prove_tests}} || @{$args->{forkprove_tests}}) {
         die "must be set 'prove_tests' and 'forkprove_tests(optional)'";
     }
     my $self = $class->SUPER::new({ %$args });
