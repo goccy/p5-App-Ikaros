@@ -35,17 +35,18 @@ sub new {
     }
     die "unknown hostname [$hostname]" unless $hostname;
 
-    my $user     = $h->{user}        || $default->{user} || $ENV{USER};
-    my $key      = $h->{private_key} || $default->{private_key} || '';
-    my $workdir  = $h->{workdir}     || $default->{workdir} || '$HOME';
-    my $runner   = $h->{runner}      || $default->{runner}  || 'prove';
-    my $coverage = $h->{coverage}    || $default->{coverage}|| 0;
-    my $perlbrew = $h->{perlbrew}    || $default->{perlbrew}|| 0;
+    my $user       = $h->{user}        || $default->{user} || $ENV{USER};
+    my $key        = $h->{private_key} || $default->{private_key} || '';
+    my $passphrase = $h->{ssh_opt}     || $default->{ssh_opt}  || '';
+    my $workdir    = $h->{workdir}     || $default->{workdir} || '$HOME';
+    my $runner     = $h->{runner}      || $default->{runner}  || 'prove';
+    my $coverage   = $h->{coverage}    || $default->{coverage}|| 0;
+    my $perlbrew   = $h->{perlbrew}    || $default->{perlbrew}|| 0;
     die "please setup workdir for testing" unless $workdir;
 
-    my @ssh_opt = ($key) ? (key_path => $key) : ();
+    my $ssh_opt->{key_path} = $key if $key;
 
-    my $ssh = Net::OpenSSH->new($user . '@' . $hostname, @ssh_opt);
+    my $ssh = Net::OpenSSH->new($user . '@' . $hostname, %$ssh_opt);
     $ssh->error and die 'unable to connect to remote host: ' . $ssh->error;
     my $trigger_filename = __unique_name($workdir, $hostname, 'build_kicker.pl');
     my $output_filename  = __unique_name($workdir, $hostname, 'output.xml');
