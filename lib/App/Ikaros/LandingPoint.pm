@@ -12,6 +12,7 @@ __PACKAGE__->mk_accessors(qw/
     workdir
     coverage
     perlbrew
+    plenv
     connection
     prove
     tests
@@ -41,6 +42,7 @@ sub new {
     my $runner   = $h->{runner}      || $default->{runner}  || 'prove';
     my $coverage = $h->{coverage}    || $default->{coverage}|| 0;
     my $perlbrew = $h->{perlbrew}    || $default->{perlbrew}|| 0;
+    my $plenv    = $h->{plenv}       || $default->{plenv}   || 0;
     die "please setup workdir for testing" unless $workdir;
 
     my @ssh_opt = ($key) ? (key_path => $key) : ();
@@ -60,6 +62,7 @@ sub new {
         runner     => $runner,
         coverage   => $coverage,
         perlbrew   => $perlbrew,
+        plenv      => $plenv,
         trigger_filename => $trigger_filename,
         output_filename  => $output_filename,
         dot_prove_filename => $dot_prove_filename,

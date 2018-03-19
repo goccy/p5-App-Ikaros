@@ -14,7 +14,17 @@ our @EXPORT_OK = qw/
 
 sub perl($) {
     my ($host) = @_;
-    my $env = ($host->perlbrew) ? 'source $HOME/perl5/perlbrew/etc/bashrc;' : '';
+    my $env = '';
+
+    if ($host->perlbrew) {
+        $env = 'source $HOME/perl5/perlbrew/etc/bashrc;';
+    }elsif($host->plenv) {
+        my $plenv_root = `plenv root`;
+        chomp($plenv_root);
+        $env .= sprintf('export PATH=%s/bin:$PATH;', $plenv_root);
+        $env .= 'eval "$(plenv init -)";';
+    }
+
     return $env . 'perl';
 }
 

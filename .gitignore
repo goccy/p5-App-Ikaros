@@ -18,3 +18,4 @@ ikaros_output.xml
 local
 .prove
 cpanfile.snapshot
+.perl-version
