@@ -7,7 +7,7 @@ use IO::Handle;
 use Net::OpenSSH;
 
 plan skip_all =>  "SSH client not found"
-    if `shh -V 2>&1`;
+    unless `ssh -V 2>&1`;
 
 my $ssh = Net::OpenSSH->new(
     host => 'localhost',
@@ -29,6 +29,8 @@ default:
   runner: prove
   workdir: $DEFAULT_DIR
   plenv: true
+  ssh_opt:
+    strict_mode: 0
 
 hosts:
   - localhost:
