@@ -48,6 +48,8 @@ plan:
     - example/plan/test2.plan
   prove_command:
     - perl
+    # preload TAP::Harness due to bug of Base.pm (version 2.16)
+    - -MTAP::Harness
     - \$prove
   rsync:
     to: $APP_DIR
