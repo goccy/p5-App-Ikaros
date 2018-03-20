@@ -71,7 +71,12 @@ sub __install_trigger_script {
     my $filename = $host->trigger_filename;
     my $tests = join ', ', map { "'$_'" } @{$host->tests};
     my $prove = join ', ', map { "'$_'" } @{$host->prove};
-    my $trigger_script = sprintf($self->code, $prove, $tests);
+    my $trigger_script = sprintf(
+        $self->code,
+        $prove,
+        $tests,
+        $host->forkprove_ignore_env || ''
+    );
     App::Ikaros::IO::write($filename, $trigger_script);
     $host->connection->scp_put({}, $filename, $host->workdir);
 }
@@ -84,7 +89,7 @@ use warnings;
 use IPC::Run qw//;
 
 sub run {
-    my (@argv) = @_;
+    my ($cmd, @opt) = @_;
     my $stdout = '';
     my $status = do {
         my $in = '';
@@ -94,7 +99,7 @@ sub run {
             print $s;
         };
         my $err = sub { warn shift; };
-        IPC::Run::run \@argv, \$in, $out, $err;
+        IPC::Run::run $cmd, \$in, $out, $err, @opt;
     };
     return map {
         if ($_ =~ /\A(.*?)\s*\(Wstat: [1-9]/ms) {
@@ -105,12 +110,16 @@ sub run {
     } split /\n/xms, $stdout;
 }
 
-my @prove_args = (
+my @prove_cmd = (
     %s,
     '--harness',
     'TAP::Harness::JUnit',
     %s
 );
-run(@prove_args);
+run(\@prove_cmd, init => sub {
+        if (my $ignore_regexp = '%s') {
+            $ENV{PERL_FORKPROVE_IGNORE}=$ignore_regexp;
+        }
+});
 exit(1);
 

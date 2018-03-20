@@ -14,6 +14,7 @@ use constant {
 __PACKAGE__->mk_accessors(qw/
     prove_tests
     forkprove_tests
+    blacklist
     saved_tests
     sorted_tests
 /);
@@ -34,6 +35,11 @@ sub planning {
     my ($self, $host, $args) = @_;
     my $commands = $self->__make_command($args, $host);
     $host->plan($commands);
+
+    if (@{ $self->blacklist || [] }) {
+        my $forkprove_ignore_regexp = join '|', (map { quotemeta } @{$self->blacklist});
+        $host->forkprove_ignore_env('\A(?:' . $forkprove_ignore_regexp . ')\z');
+    }
 }
 
 sub __load_prove_state {

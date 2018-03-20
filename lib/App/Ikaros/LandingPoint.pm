@@ -20,6 +20,7 @@ __PACKAGE__->mk_accessors(qw/
     output_filename
     dot_prove_filename
     cover_db_name
+    forkprove_ignore_env
 /);
 
 sub new {
@@ -66,7 +67,8 @@ sub new {
         trigger_filename => $trigger_filename,
         output_filename  => $output_filename,
         dot_prove_filename => $dot_prove_filename,
-        cover_db_name    => $cover_db_name
+        cover_db_name    => $cover_db_name,
+        forkprove_ignore_env => '',
     });
 }
 
